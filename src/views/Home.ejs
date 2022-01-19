@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Search words including ...</title>
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
+        />
+        <script
+            type="text/javascript"
+            src="https://cdn.jsdelivr.net/npm/toastify-js"
+        ></script>
+        <style>
+            :root {
+                --rainbow: hsl(360, 100%, 85%);
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif;
+            }
+
+            body {
+                background: var(--rainbow);
+                overflow: hidden;
+            }
+
+            .container {
+                max-width: 960px;
+                width: 100%;
+                margin: 0 auto;
+                padding: 96px 18px;
+            }
+
+            .title {
+                text-align: center;
+                font-size: 36pt;
+            }
+
+            #include_input {
+                width: 100%;
+                padding: 10px 5px;
+                font-size: 18pt;
+                outline: none;
+                border-radius: 10px;
+                border: 1px solid #ccc;
+                text-align: center;
+                margin: 32px 0;
+            }
+
+            ul#results {
+                list-style-type: none;
+                margin: 8px 0;
+            }
+
+            ul#results li {
+                cursor: pointer;
+                font-family: 'Consolas', 'Courier New', 'Lucida Mono', monospace;
+                font-size: 14pt;
+                padding: 4px 0;
+            }
+
+            ul#results li:hover {
+                transition: all 0.075s ease-out;
+                text-decoration: underline;
+                color: red;
+                font-size: 18pt;
+            }
+
+            ul#results li:active {
+                text-decoration: underline;
+                font-weight: bold;
+                color: blue;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1 class="title">
+                Search words including<span id="word">...</span>
+            </h1>
+            <input type="text" id="include_input" />
+            <div>
+                <h2 id="results_text">results:</h2>
+                <ul id="results"></ul>
+            </div>
+        </div>
+        <script>
+            const interval = 50;
+            const max_entries = 20;
+            let h = 0;
+            setInterval(() => {
+                if (h < 360) h++;
+                if (h === 360) h = 0;
+                document
+                    .querySelector(':root')
+                    .style.setProperty('--rainbow', `hsl(${h}, 100%, 95%)`);
+            }, interval);
+
+            function copy(text) {
+                const i = document.createElement('input');
+                i.style.position = 'absolute';
+                i.style.visibility = 'hidden';
+                i.style.opacity = '0';
+                i.value = text;
+                i.select();
+                i.setSelectionRange(0, 99999);
+                navigator.clipboard.writeText(i.value);
+                i.remove();
+
+                if (Toastify) {
+                    Toastify({
+                        text: 'Copied to your clipboard!',
+                        duration: 1000,
+                        gravity: 'top',
+                        position: 'center',
+                        style: {
+                            borderRadius: '5px',
+                        },
+                    }).showToast();
+                } else {
+                    alert('Copied to your clipboard!');
+                }
+            }
+
+            function randomPlaceholder(el) {
+                const random_words = [
+                    'peanut',
+                    'donut',
+                    'banana',
+                    'homer simpson',
+                    'fridge',
+                    'frying pan',
+                    'yo grandma',
+                    'yo mama',
+                    'amogus',
+                    'sus',
+                    'quantum computer',
+                    'js (javascript)',
+                    'py (python)',
+                    'ts (typescript)',
+                ];
+
+                let rand =
+                    random_words[
+                        Math.floor(Math.random() * random_words.length)
+                    ];
+
+                el.placeholder = rand;
+            }
+
+            const include_input = document.getElementById('include_input');
+            const word = document.getElementById('word');
+            const results = document.getElementById('results');
+            const results_text = document.getElementById('results_text');
+
+            randomPlaceholder(include_input);
+
+            include_input.addEventListener('input', (e) => {
+                const val = e.target.value;
+
+                if (!val) {
+                    randomPlaceholder(include_input);
+                    word.innerHTML = '...';
+                    document.title = 'Search words including...';
+                } else {
+                    word.innerHTML = ` ${val}`;
+                    document.title = `Search words including ${val}`;
+                }
+
+                results.innerHTML = '';
+                results_text.innerHTML = `results:`;
+
+                fetch(`/api/word/${val}`)
+                    .then(async (res) => {
+                        const status = await res.status;
+
+                        if (status === 200) {
+                            let words = await res.json();
+                            if (words.length > max_entries)
+                                words = words.slice(0, max_entries);
+                            for (const w of words) {
+                                results.innerHTML += `<li onClick="copy('${w}')">${w}</li>`;
+                            }
+                            results_text.innerHTML = `results (${words.length}):`;
+                        }
+                        if (status === 404) {
+                            results.innerHTML = '<li>No words found.</li>';
+                        }
+                    })
+                    .catch((err) => console.log(err));
+            });
+        </script>
+    </body>
+</html>

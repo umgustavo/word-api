@@ -1,0 +1,22 @@
+{
+    "name": "ss-jklm-api",
+    "version": "0.1.0",
+    "description": "An API that returns a word with specified text",
+    "main": "src/server.js",
+    "scripts": {
+        "start": "node .",
+        "dev": "nodemon ."
+    },
+    "author": "Gustavo Rocha",
+    "license": "MIT",
+    "dependencies": {
+        "dotenv": "^14.2.0",
+        "ejs": "^3.1.6",
+        "express": "^4.17.2",
+        "gulog": "^2.0.0",
+        "morgan": "^1.10.0"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.15"
+    }
+}
